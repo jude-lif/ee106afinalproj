@@ -1,10 +1,19 @@
 #!/usr/bin/env python
 
 # catkin_create_pkg turtlebot_random_mapper rospy geometry_msgs sensor_msgs nav_msgs std_msgs
-
+#ssh ubuntu@192.168.1.151
 #roslaunch turtlebot3_bringup turtlebot3_robot.launch
 #roslaunch turtlebot3_slam turtlebot3_slam.launch
-#python turtlebot_random_mapper.py
+#python turtlebot_mapper.py
+
+
+# cd $(rospack find turtlebot3_slam)/launch
+# vim turtlebot3_slam.launch
+
+# <param name="update_min_d" value="0.2" />
+# <param name="update_min_a" value="0.2" />
+# <param name="particles" value="50" />
+
 
 import rospy
 import random
@@ -12,8 +21,7 @@ from geometry_msgs.msg import Twist
 from sensor_msgs.msg import LaserScan
 from nav_msgs.msg import OccupancyGrid
 from std_msgs.msg import String
-
-# test test adding something to commit
+from statistics import median
 
 class TurtleBotRandomMapper:
     def __init__(self):
@@ -25,11 +33,12 @@ class TurtleBotRandomMapper:
         self.map_subscriber = rospy.Subscriber('/map', OccupancyGrid, self.map_callback)
         self.scan_subscriber = rospy.Subscriber('/scan', LaserScan, self.scan_callback)
         self.error_subscriber = rospy.Subscriber('/camera/error', String, self.error_callback)
-        self.isError = False
 
+        self.isError = False
         self.rate = rospy.Rate(10)  # 10 Hz
         self.map_data = None
         self.obstacle_detected = False
+        self.filtered_distances = []
 
     def map_callback(self, data):
         self.map_data = data
@@ -37,42 +46,65 @@ class TurtleBotRandomMapper:
         self.publish_map()
 
     def scan_callback(self, data):
-        front_angles = range(-15, 16) 
-        num_scans = len(data.ranges)
-        front_indices = [i % num_scans for i in front_angles]
+        # Front facing
+        front_angle_range = range(45, 135)
+        num_readings = len(data.ranges)
 
-        # Extract distances for the front angles
-        front_distances = [data.ranges[i] for i in front_indices if 0.1 < data.ranges[i] < 3.0]  # Filter valid values
+        # Map angles to indicies
+        front_indices = [(i + num_readings) % num_readings for i in front_angle_range]
 
-        # Check if there's an obstacle directly ahead within 0.5 meters
-        if front_distances and min(front_distances) < 0.05:
-            rospy.logwarn("Obstacle detected directly ahead!")
-            self.obstacle_detected = True
+        # get distances from front angles
+        front_distances = [data.ranges[i] for i in front_indices if data.range_min < data.ranges[i] < data.range_max]
+        # rospy.loginfo(f"Front distances: {front_distances}")
+
+        # Check if an obstacle is within 0.2 meters
+        # obstacle_distance_threshold = 0.2
+        # if front_distances and min(front_distances) < obstacle_distance_threshold:
+        #     #if any(0.1 < dist < obstacle_distance_threshold for dist in data.ranges):
+        #     rospy.logwarn("Obstacle detected directly ahead!")
+        #     rospy.logwarn(f"Obstacle detected directly ahead: {min(front_distances):.2f} meters")
+        #     self.obstacle_detected = True
+        # else:
+        #     self.obstacle_detected = False
+
+        if front_distances:
+            median_distance = median(front_distances)
+            self.filtered_distances = front_distances
+            rospy.loginfo_once(f"Median filtered distance: {median_distance:.2f} meters")
         else:
-            self.obstacle_detected = False
-    
+            self.filtered_distances = []
+
     def error_callback(self, message):
         if message.data == "error":
             self.isError = True
-        print(message.data)
+            rospy.logwarn(message.data)
 
     def publish_map(self):
         if self.map_data:
-            rospy.loginfo("Publishing map to /shared_map")
+            # rospy.loginfo("Publishing map to /shared_map")
             self.map_publisher.publish(self.map_data)
 
     def random_move(self):
         while not rospy.is_shutdown():
-            if self.obstacle_detected:
+            if self.is_obstacle_detected():
                 # Stop and rotate randomly to avoid the obstacle
                 self.stop_robot()
                 rospy.loginfo("Obstacle detected. Avoiding...")
                 self.random_rotate()
             else:
-                # Move forward a random distance
-                random_distance = random.uniform(0.5, 2.0)
-                rospy.loginfo(f"Moving forward: {random_distance:.2f} meters")
+                # Randomly decide whether to turn or move forward
+                # if random.choice([True, False]):
+                #     rospy.loginfo("Random decision: Rotate")
+                #     self.random_rotate()
+                
+                random_distance = random.uniform(0.1, 0.2)
+                rospy.loginfo(f"Random decision: Move forward {random_distance:.2f} meters")
                 self.move_forward(distance=random_distance)
+
+
+    def is_obstacle_detected(self):
+        obstacle_distance_threshold = 0.2
+        return any(dist < obstacle_distance_threshold for dist in self.filtered_distances)
 
     def move_forward(self, speed=0.2, distance=1.0):
         velocity_message = Twist()
@@ -91,9 +123,9 @@ class TurtleBotRandomMapper:
         self.stop_robot()
 
     def random_rotate(self):
-        random_angle = random.uniform(30, 180)
-        angular_speed = 0.5 
-        time_to_rotate = random_angle / (angular_speed * 57.3) 
+        random_angle = random.uniform(30, 90)  # Random angle in degrees
+        angular_speed = 0.5  # radians per second
+        time_to_rotate = random_angle / (angular_speed * 57.3)  # Convert degrees to radians
 
         velocity_message = Twist()
         velocity_message.angular.z = angular_speed
@@ -108,7 +140,7 @@ class TurtleBotRandomMapper:
     def stop_robot(self):
         velocity_message = Twist()
         self.velocity_publisher.publish(velocity_message)
-        rospy.sleep(0.5) 
+        rospy.sleep(0.5)
 
     def start_mapping(self):
         rospy.loginfo("Starting random mapping...")
@@ -118,9 +150,5 @@ if __name__ == '__main__':
     try:
         mapper = TurtleBotRandomMapper()
         mapper.start_mapping()
-        rospy.spin()
     except rospy.ROSInterruptException:
         pass
-
-
-
