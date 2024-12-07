@@ -22,6 +22,9 @@ from sensor_msgs.msg import LaserScan
 from nav_msgs.msg import OccupancyGrid
 from std_msgs.msg import String
 from statistics import median
+import subprocess
+from geometry_msgs.msg import PoseWithCovarianceStamped
+
 
 class TurtleBotRandomMapper:
     def __init__(self):
@@ -40,10 +43,17 @@ class TurtleBotRandomMapper:
         self.obstacle_detected = False
         self.filtered_distances = []
 
+        self.pose_publisher = rospy.Publisher('/robot1_pose', PoseWithCovarianceStamped, queue_size=10)
+        self.pose_subscriber = rospy.Subscriber('/amcl_pose', PoseWithCovarianceStamped, self.pose_callback)
+
     def map_callback(self, data):
         self.map_data = data
         rospy.loginfo("Map updated.")
         self.publish_map()
+
+    
+    def pose_callback(self, data):
+        self.pose_publisher.publish(data)
 
     def scan_callback(self, data):
         # Front facing
@@ -81,8 +91,16 @@ class TurtleBotRandomMapper:
 
     def publish_map(self):
         if self.map_data:
-            # rospy.loginfo("Publishing map to /shared_map")
+            # Publish the map to the /shared_map topic
             self.map_publisher.publish(self.map_data)
+            rospy.loginfo("Publishing map to /shared_map")
+
+            # Save the map using map_saver
+            map_save_path = "/home/cc/ee106a/fa24/class/ee106a-aiv/ros_workspaces/ee106afinalproj/project/src/map"  # Specify your desired path and name
+            
+            rospy.loginfo("Saving the map...")
+            subprocess.run(["rosrun", "map_server", "map_saver", "-f", map_save_path], check=True)
+            rospy.loginfo(f"Map saved successfully at {map_save_path}.")
 
     def random_move(self):
         while not rospy.is_shutdown():
