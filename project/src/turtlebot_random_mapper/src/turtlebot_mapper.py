@@ -13,6 +13,8 @@ from sensor_msgs.msg import LaserScan
 from nav_msgs.msg import OccupancyGrid
 from std_msgs.msg import String
 
+# test test adding something to commit
+
 class TurtleBotRandomMapper:
     def __init__(self):
         rospy.init_node('turtlebot_mapper', anonymous=True)
