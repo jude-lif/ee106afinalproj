@@ -6,6 +6,8 @@
 #roslaunch turtlebot3_slam turtlebot3_slam.launch
 #python turtlebot_mapper.py
 
+#roslaunch turtlebot3_navigation amcl.launch map_file:="/home/cc/ee106a/fa24/class/ee106a-aiv/ros_workspaces/ee106afinalproj/project/src/map.yaml"
+
 
 # cd $(rospack find turtlebot3_slam)/launch
 # vim turtlebot3_slam.launch
@@ -96,7 +98,7 @@ class TurtleBotRandomMapper:
             rospy.loginfo("Publishing map to /shared_map")
 
             # Save the map using map_saver
-            map_save_path = "/home/cc/ee106a/fa24/class/ee106a-aiv/ros_workspaces/ee106afinalproj/project/src/map"  # Specify your desired path and name
+            map_save_path = "/home/cc/ee106a/fa24/class/ee106a-aiv/ros_workspaces/ee106afinalproj/project/src/map" 
             
             rospy.loginfo("Saving the map...")
             subprocess.run(["rosrun", "map_server", "map_saver", "-f", map_save_path], check=True)
@@ -121,10 +123,10 @@ class TurtleBotRandomMapper:
 
 
     def is_obstacle_detected(self):
-        obstacle_distance_threshold = 0.2
+        obstacle_distance_threshold = 0.3
         return any(dist < obstacle_distance_threshold for dist in self.filtered_distances)
 
-    def move_forward(self, speed=0.2, distance=1.0):
+    def move_forward(self, speed=0.2, distance=0.2):
         velocity_message = Twist()
         velocity_message.linear.x = speed
 
@@ -141,7 +143,7 @@ class TurtleBotRandomMapper:
         self.stop_robot()
 
     def random_rotate(self):
-        random_angle = random.uniform(30, 90)  # Random angle in degrees
+        random_angle = random.uniform(45, 135)  # Random angle in degrees
         angular_speed = 0.5  # radians per second
         time_to_rotate = random_angle / (angular_speed * 57.3)  # Convert degrees to radians
 
