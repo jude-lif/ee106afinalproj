@@ -12,9 +12,11 @@
 # cd $(rospack find turtlebot3_slam)/launch
 # vim turtlebot3_slam.launch
 
-# <param name="update_min_d" value="0.2" />
+# <param name="update_min_d" value="0.2untitled folder 2" />
 # <param name="update_min_a" value="0.2" />
 # <param name="particles" value="50" />
+# roslaunch turtlebot3_navigation amcl.launch map_file:="/home/cc/ee106a/fa24/class/ee106a-aiv/ros_workspaces/ee106afinalproj/project/src/map.yaml"
+#  rostopic pub /move_base/goal move_base_msgs/MoveBaseActionGoal '{ header: { stamp: now, frame_id: "map" }, goal: { target_pose: { header: { stamp: now, frame_id: "map" }, pose: { position: { x: 1.0, y: 1.0, z: 0.0 }, orientation: { w: 1.0 } } } } }'
 
 
 import rospy
@@ -59,7 +61,7 @@ class TurtleBotRandomMapper:
 
     def scan_callback(self, data):
         # Front facing
-        front_angle_range = range(45, 135)
+        front_angle_range = range(30, 150)
         num_readings = len(data.ranges)
 
         # Map angles to indicies
@@ -126,7 +128,7 @@ class TurtleBotRandomMapper:
         obstacle_distance_threshold = 0.3
         return any(dist < obstacle_distance_threshold for dist in self.filtered_distances)
 
-    def move_forward(self, speed=0.2, distance=0.2):
+    def move_forward(self, speed=0.1, distance=0.15):
         velocity_message = Twist()
         velocity_message.linear.x = speed
 
@@ -143,7 +145,7 @@ class TurtleBotRandomMapper:
         self.stop_robot()
 
     def random_rotate(self):
-        random_angle = random.uniform(45, 135)  # Random angle in degrees
+        random_angle = random.uniform(30, 90)  # Random angle in degrees
         angular_speed = 0.5  # radians per second
         time_to_rotate = random_angle / (angular_speed * 57.3)  # Convert degrees to radians
 

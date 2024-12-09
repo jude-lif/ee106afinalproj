@@ -61,6 +61,9 @@ else()
     NO_DEFAULT_PATH NO_CMAKE_FIND_ROOT_PATH)
   unset(CATKIN_TOPLEVEL_FIND_PACKAGE)
 
+  find_package(catkin REQUIRED COMPONENTS turtlebot_random_mapper)
+
+
   if(NOT catkin_FOUND)
     message(FATAL_ERROR "find_package(catkin) failed. catkin was neither found in the workspace nor in the CMAKE_PREFIX_PATH. One reason may be that no ROS setup.sh was sourced before.")
   endif()
