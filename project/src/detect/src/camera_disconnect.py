@@ -11,8 +11,6 @@ def simulate_camera_disconnection():
 
 
     while not rospy.is_shutdown():
-    
-          
         #warning_message = "[139829304096512] (backend-v4l2.cpp:1013) Frames didn't arrive within 5 seconds"
         warning_message = "error"
         pub.publish(warning_message)

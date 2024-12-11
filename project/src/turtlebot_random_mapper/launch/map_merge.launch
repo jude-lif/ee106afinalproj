@@ -1,0 +1,12 @@
+<launch>
+  <node pkg="map_server" type="map_server" name="map_server_1" args="/path/to/turtlebot1_map.yaml" output="screen" />
+
+  <node pkg="map_server" type="map_server" name="map_server_2" args="/path/to/turtlebot2_map.yaml" output="screen" />
+
+  <node pkg="multirobot_map_merge" type="map_merge" name="map_merge" output="screen">
+    <param name="robot_map_topic" value="/map" />
+    <param name="robot_namespace" value="" />
+    <param name="world_frame" value="map" />
+    <param name="merged_map_topic" value="/merged_map" />
+  </node>
+</launch>

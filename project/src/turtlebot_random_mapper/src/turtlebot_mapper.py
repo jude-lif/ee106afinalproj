@@ -51,9 +51,10 @@ class TurtleBotRandomMapper:
         self.pose_subscriber = rospy.Subscriber('/amcl_pose', PoseWithCovarianceStamped, self.pose_callback)
 
     def map_callback(self, data):
-        self.map_data = data
-        rospy.loginfo("Map updated.")
-        self.publish_map()
+        if not self.isError:
+            self.map_data = data
+            rospy.loginfo("Map updated.")
+            self.publish_map()
 
     
     def pose_callback(self, data):
@@ -100,7 +101,7 @@ class TurtleBotRandomMapper:
             rospy.loginfo("Publishing map to /shared_map")
 
             # Save the map using map_saver
-            map_save_path = "/home/cc/ee106a/fa24/class/ee106a-aiv/ros_workspaces/ee106afinalproj/project/src/map" 
+            map_save_path = "/home/cc/ee106a/fa24/class/ee106a-ahi/ros_workspaces/ee106afinalproj/project/src/map1" 
             
             rospy.loginfo("Saving the map...")
             subprocess.run(["rosrun", "map_server", "map_saver", "-f", map_save_path], check=True)
@@ -108,6 +109,8 @@ class TurtleBotRandomMapper:
 
     def random_move(self):
         while not rospy.is_shutdown():
+            if self.isError:
+                return
             if self.is_obstacle_detected():
                 # Stop and rotate randomly to avoid the obstacle
                 self.stop_robot()
