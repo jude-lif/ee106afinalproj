@@ -7,6 +7,8 @@ from geometry_msgs.msg import Twist
 from sensor_msgs.msg import LaserScan
 from nav_msgs.msg import Odometry
 import threading
+from std_msgs.msg import String
+
 
 class TurtleBotWallFollower:
     def __init__(self):
@@ -14,17 +16,18 @@ class TurtleBotWallFollower:
 
         # Log and store the starting position
         self.start_position = self.get_robot_position()
-        rospy.set_param("/robot1/start_position", (self.start_position.x, self.start_position.y))
-        rospy.loginfo(f"Start Position: ({self.start_position.x}, {self.start_position.y})")
+        #rospy.set_param("/robot1/start_position", (self.start_position.position.x, self.start_position.position.y))
+        rospy.loginfo(f"Start Position: ({self.start_position.position.x}, {self.start_position.position.y})")
 
         # Save start position to file
         self.position_file_path = os.path.join(os.path.dirname(__file__), "robot_positions.txt")
         with open(self.position_file_path, "w") as file:
-            file.write(f"Start Position: ({self.start_position.x}, {self.start_position.y})\n")
+            file.write(f"Start Position: ({self.start_position.position.x}, {self.start_position.position.y}, {self.start_position.orientation.x}, {self.start_position.orientation.y}, {self.start_position.orientation.z}, {self.start_position.orientation.w})\n")
 
         # Publisher and subscriber
         self.velocity_publisher = rospy.Publisher('/cmd_vel', Twist, queue_size=10)
         self.scan_subscriber = rospy.Subscriber('/scan', LaserScan, self.scan_callback)
+        self.error_subscriber = rospy.Subscriber('/camera/error', String, self.error_callback)
 
         self.rate = rospy.Rate(10)  # 10 Hz
         self.wall_distance = 0.25  # Desired distance from the wall in meters
@@ -32,9 +35,12 @@ class TurtleBotWallFollower:
         self.emergency_stop_distance = 0.21  # Stop if closer than this to an obstacle
         self.scan_data = None
 
+        # Error
+        self.isError = False
+
         # Map saving directory
         self.map_save_path = "/home/cc/ee106a/fa24/class/ee106a-aiv/ros_workspaces/ee106afinalproj/project/src/"
-        self.map_save_interval = 3  # Save map every 3 seconds
+        self.map_save_interval = 1  # Save map every 3 seconds
 
         # Start a thread to save the map periodically
         self.map_saver_thread = threading.Thread(target=self.save_map_periodically)
@@ -44,38 +50,46 @@ class TurtleBotWallFollower:
     def get_robot_position(self):
         """Helper to get the robot's current position from /odom."""
         odometry_data = rospy.wait_for_message('/odom', Odometry)
-        return odometry_data.pose.pose.position
+        return odometry_data.pose.pose
 
     def log_final_position(self):
         """Log the robot's final position before shutting down."""
         final_position = self.get_robot_position()
-        rospy.set_param("/robot1/final_position", (final_position.x, final_position.y))
-        rospy.loginfo(f"Final Position: ({final_position.x}, {final_position.y})")
+        #rospy.set_param("/robot1/final_position", (final_position.x, final_position.y))
+        rospy.loginfo(f"Final Position: ({final_position.position.x}, {final_position.position.y})")
 
         # Save final position to file
         with open(self.position_file_path, "a") as file:
-            file.write(f"Final Position: ({final_position.x}, {final_position.y})\n")
+            file.write(f"Final Position: ({final_position.position.x}, {final_position.position.y}, {final_position.orientation.x}, {final_position.orientation.y}, {final_position.orientation.z}, {final_position.orientation.w})\n")
 
     def scan_callback(self, data):
         self.scan_data = data
 
+    def error_callback(self, message):
+        if message.data == "error":
+            self.isError = True
+            rospy.logwarn(message.data)
+
     def save_map_periodically(self):
         while not rospy.is_shutdown():
-            rospy.loginfo("Saving map...")
-            try:
-                subprocess.call([
-                    "rosrun", "map_server", "map_saver",
-                    "-f", os.path.join(self.map_save_path, "map")
-                ])
-                rospy.loginfo("Map saved successfully.")
-            except Exception as e:
-                rospy.logerr(f"Failed to save map: {e}")
-            rospy.sleep(self.map_save_interval)
+            if not self.isError:
+                rospy.loginfo("Saving map...")
+                try:
+                    subprocess.call([
+                        "rosrun", "map_server", "map_saver",
+                        "-f", os.path.join(self.map_save_path, "map"), "map:=/map"
+                    ])
+                    rospy.loginfo("Map saved successfully.")
+                except Exception as e:
+                    rospy.logerr(f"Failed to save map: {e}")
+                rospy.sleep(self.map_save_interval)
 
     def follow_wall(self):
         velocity_message = Twist()
 
         while not rospy.is_shutdown():
+            if self.isError:
+                return
             if not self.scan_data:
                 rospy.logwarn("Waiting for scan data...")
                 self.rate.sleep()
