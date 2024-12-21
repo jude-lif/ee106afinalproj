@@ -8,6 +8,8 @@ class MapReceiver:
         rospy.init_node('map_receiver', anonymous=True)
         self.map_subscriber = rospy.Subscriber('/shared_map', OccupancyGrid, self.map_callback)
 
+/map
+
     def map_callback(self, data):
         # logic of what we do once getting map
         rospy.loginfo("Received map data.")

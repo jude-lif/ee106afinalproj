@@ -35,7 +35,7 @@ class TurtleBotRandomMapper:
         self.publish_map()
 
     def scan_callback(self, data):
-        front_angles = range(-15, 16) 
+        front_angles = range(45, 135) 
         num_scans = len(data.ranges)
         front_indices = [i % num_scans for i in front_angles]
 
@@ -43,7 +43,7 @@ class TurtleBotRandomMapper:
         front_distances = [data.ranges[i] for i in front_indices if 0.1 < data.ranges[i] < 3.0]  # Filter valid values
 
         # Check if there's an obstacle directly ahead within 0.5 meters
-        if front_distances and min(front_distances) < 0.05:
+        if front_distances and min(front_distances) < 0.045:
             rospy.logwarn("Obstacle detected directly ahead!")
             self.obstacle_detected = True
         else:
@@ -68,7 +68,7 @@ class TurtleBotRandomMapper:
                 self.random_rotate()
             else:
                 # Move forward a random distance
-                random_distance = random.uniform(0.5, 2.0)
+                random_distance = random.uniform(0.1, 0.3)
                 rospy.loginfo(f"Moving forward: {random_distance:.2f} meters")
                 self.move_forward(distance=random_distance)
 
@@ -89,7 +89,7 @@ class TurtleBotRandomMapper:
         self.stop_robot()
 
     def random_rotate(self):
-        random_angle = random.uniform(30, 180)
+        random_angle = random.uniform(20, 90)
         angular_speed = 0.5 
         time_to_rotate = random_angle / (angular_speed * 57.3) 
 

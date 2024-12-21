@@ -1,0 +1,49 @@
+Turtle bot 1:
+
+ssh ubuntu@192.168.1.151
+
+roslaunch turtlebot3_bringup turtlebot3_robot.launch
+
+
+
+source ~/ros_workspaces/ee106afinalproj/project/devel/setup.bash
+roslaunch turtlebot_random_mapper robot1_mapper.launch
+
+
+
+python /home/cc/ee106a/fa24/class/ee106a-aiv/ros_workspaces/ee106afinalproj/project/src/turtlebot_random_mapper/src/systematic_mapping.py
+
+
+
+Another bash script to do this: 
+
+python /home/cc/ee106a/fa24/class/ee106a-aiv/ros_workspaces/ee106afinalproj/project/src/detect/src/camera_disconnect.py
+
+cancel the roslaunch turtlebot3_bringup turtlebot3_robot.launch bring up terminal
+
+
+
+Turtle bot 2:
+
+
+ssh apple@apple
+
+roslaunch turtlebot3_bringup turtlebot3_robot.launch
+
+roslaunch realsense2_camera rs_camera.launch mode:=Manual color_width:=424 color_height:=240 depth_width:=424 depth_height:=240 align_depth:=true depth_fps:=6 color_fps:=6
+
+
+source ~/ros_workspaces/ee106afinalproj/project/devel/setup.bash
+cd ~/ros_workspaces/ee106afinalproj/project/
+rosrun perception object_detector.py
+
+
+rosrun map_server map_server /home/cc/ee106a/fa24/class/ee106a-aiv/ros_workspaces/ee106afinalproj/project/src/map.yaml
+
+
+roslaunch turtlebot3_navigation turtlebot3_navigation.launch map_file:=/home/cc/ee106a/fa24/class/ee106a-aiv/ros_workspaces/ee106afinalproj/project/src/map.yaml
+
+
+
+python /home/cc/ee106a/fa24/class/ee106a-aiv/ros_workspaces/ee106afinalproj/project/src/turtlebot_random_mapper/src/load_map_and_naavigate.py
+

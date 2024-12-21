@@ -7,7 +7,7 @@ def simulate_camera_disconnection():
     rospy.loginfo("Camera failure simulation node started.")
     pub = rospy.Publisher('/camera/error', String, queue_size=10)
     r = rospy.Rate(10) 
-    rospy.sleep(5)
+    rospy.sleep(1)
 
 
     while not rospy.is_shutdown():

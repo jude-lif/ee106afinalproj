@@ -1,0 +1,19 @@
+digraph G {
+"odom" -> "base_footprint"[label="Broadcaster: /turtlebot3_core\nAverage rate: 30.505 Hz\nMost recent transform: 1733918100.738 ( 0.006 sec old)\nBuffer length: 4.950 sec\n"];
+"map" -> "odom"[label="Broadcaster: /turtlebot3_slam_gmapping\nAverage rate: 20.204 Hz\nMost recent transform: 1733918100.749 ( -0.005 sec old)\nBuffer length: 4.900 sec\n"];
+"base_footprint" -> "base_link"[label="Broadcaster: /robot_state_publisher\nAverage rate: 10000.000 Hz\nMost recent transform: 0.000 ( 1733918100.744 sec old)\nBuffer length: 0.000 sec\n"];
+"base_link" -> "caster_back_link"[label="Broadcaster: /robot_state_publisher\nAverage rate: 10000.000 Hz\nMost recent transform: 0.000 ( 1733918100.744 sec old)\nBuffer length: 0.000 sec\n"];
+"base_link" -> "imu_link"[label="Broadcaster: /robot_state_publisher\nAverage rate: 10000.000 Hz\nMost recent transform: 0.000 ( 1733918100.744 sec old)\nBuffer length: 0.000 sec\n"];
+"base_link" -> "base_scan"[label="Broadcaster: /robot_state_publisher\nAverage rate: 10000.000 Hz\nMost recent transform: 0.000 ( 1733918100.744 sec old)\nBuffer length: 0.000 sec\n"];
+"base_link" -> "wheel_left_link"[label="Broadcaster: /robot_state_publisher\nAverage rate: 30.505 Hz\nMost recent transform: 1733918100.738 ( 0.006 sec old)\nBuffer length: 4.950 sec\n"];
+"base_link" -> "wheel_right_link"[label="Broadcaster: /robot_state_publisher\nAverage rate: 30.505 Hz\nMost recent transform: 1733918100.738 ( 0.006 sec old)\nBuffer length: 4.950 sec\n"];
+"apple/odom" -> "apple/base_footprint"[label="Broadcaster: /apple/turtlebot3_core\nAverage rate: 29.203 Hz\nMost recent transform: 1733918100.718 ( 0.026 sec old)\nBuffer length: 4.931 sec\n"];
+edge [style=invis];
+ subgraph cluster_legend { style=bold; color=black; label ="view_frames Result";
+"Recorded at time: 1733918100.744"[ shape=plaintext ] ;
+ }->"apple/odom";
+edge [style=invis];
+ subgraph cluster_legend { style=bold; color=black; label ="view_frames Result";
+"Recorded at time: 1733918100.744"[ shape=plaintext ] ;
+ }->"map";
+}

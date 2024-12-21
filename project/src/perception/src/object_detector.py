@@ -97,11 +97,14 @@ class ObjectDetector:
         y_coords, x_coords = np.nonzero(mask)
 
         self.robot_close_pub.publish(len(x_coords))
-        print("robot found: ", len(x_coords))
+        # print("robot found: ", len(x_coords))
+
+        if len(x_coords) > 600:
+            os.system("rosnode kill /move_base")
 
         # If there are no detected points, exit
         if len(x_coords) == 0 or len(y_coords) == 0:
-            print("No points detected. Is your color filter wrong?")
+            #print("No points detected. Is your color filter wrong?")
             return
 
         # Calculate the center of the detected region by 
@@ -110,41 +113,6 @@ class ObjectDetector:
 
         # Fetch the depth value at the center
         depth = self.cv_depth_image[center_y, center_x]
-
-        if self.fx and self.fy and self.cx and self.cy:
-            camera_x, camera_y, camera_z = self.pixel_to_point(center_x, center_y, depth)
-            camera_link_x, camera_link_y, camera_link_z = camera_z, -camera_x, -camera_y
-            # Convert from mm to m
-            camera_link_x /= 1000
-            camera_link_y /= 1000
-            camera_link_z /= 1000
-
-            # Convert the (X, Y, Z) coordinates from camera frame to odom frame
-            try:
-                self.tf_listener.waitForTransform("/odom", "/camera_link", rospy.Time(), rospy.Duration(10.0))
-                point_odom = self.tf_listener.transformPoint("/odom", PointStamped(header=Header(stamp=rospy.Time(), frame_id="/camera_link"), point=Point(camera_link_x, camera_link_y, camera_link_z)))
-                X_odom, Y_odom, Z_odom = point_odom.point.x, point_odom.point.y, point_odom.point.z
-                #print("Real-world coordinates in odom frame: (X, Y, Z) = ({:.2f}m, {:.2f}m, {:.2f}m)".format(X_odom, Y_odom, Z_odom))
-
-                if X_odom < 0.001 and X_odom > -0.001:
-                    #print("Erroneous goal point, not publishing - Is the cup too close to the camera?")
-                    pass
-                else:
-                    #print("Publishing goal point: ", X_odom, Y_odom, Z_odom)
-                    # Publish the transformed point
-                    self.point_pub.publish(Point(X_odom, Y_odom, Z_odom))
-
-                    # Overlay cup points on color image for visualization
-                    cup_img = self.cv_color_image.copy()
-                    cup_img[y_coords, x_coords] = [0, 0, 255]  # Highlight cup points in red
-                    cv2.circle(cup_img, (center_x, center_y), 5, [0, 255, 0], -1)  # Draw green circle at center
-                    
-                    # Convert to ROS Image message and publish
-                    ros_image = self.bridge.cv2_to_imgmsg(cup_img, "bgr8")
-                    self.image_pub.publish(ros_image)
-            except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException) as e:
-                print("TF Error: " + e)
-                return
 
 if __name__ == '__main__':
     ObjectDetector()

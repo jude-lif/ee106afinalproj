@@ -1,0 +1,5 @@
+<launch>
+    <include file="$(find turtlebot3_bringup)/launch/turtlebot3_robot.launch"/>
+    <node pkg="rviz" type="rviz" name="rviz" args="-d $(find turtlebot3_navigation)/rviz/view_navigation.rviz" />
+    <node pkg="turtlebot_search" type="search_robot.py" name="searcher" output="screen"/>
+</launch>
